@@ -1,0 +1,62 @@
+version: '3'
+services:
+  #PHP Service
+  ex:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: app
+    container_name: app
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: development
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+
+  #Nginx Service
+  nginx:
+    image: nginx:alpine
+    container_name: webserver
+    restart: unless-stopped
+    tty: true
+    ports:
+     - "80:80"
+     - "4443:443"
+    environment:
+      SERVICE_NAME: webserver
+      SERVICE_TAGS: development
+    volumes:
+     - ./:/var/www
+     - ./nginx/conf.d/:/etc/nginx/conf.d/
+
+  #MySQL Service
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "8888:3306"
+    environment:
+      SERVICE_NAME: mysql
+      SERVICE_TAGS: development
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_AUTHENTICATION_PLUGIN: mysql_native_password
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql8_data:/var/lib/mysql
+      - ./mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+
+  #Redis service    
+  redis:
+    image: 'redis'
+    container_name: redis
+    ports:
+      - 6379:6379
+
+volumes:
+ mysql8_data:
